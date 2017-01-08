@@ -7,7 +7,7 @@ Ok, here we will post everything I am working on right now including all my proj
 * Sephora
 * DataBrowser
 * Imaginex
-* Markdown
+* [Markdown](http://github.com/kuyawa/markdown)
 
 and many more...
 
