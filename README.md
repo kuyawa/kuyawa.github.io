@@ -1,5 +1,5 @@
 # kuyawa.github.io
-### My personal page
+## My personal page
 
 Ok, here we will post everything I am working on right now including all my projects in Swift.
 
