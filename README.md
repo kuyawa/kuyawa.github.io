@@ -14,4 +14,6 @@ and many more...
 
 This is a [test](test/)
 
+Read the book ["Intro to App Development with Swift"](books/introtoswift/)
+
 Stay tuned for more cool projects.
