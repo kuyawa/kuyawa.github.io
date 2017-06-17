@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Intro to App Development with Swift</title>
+<style>
+html, body { margin: 0; padding: 0; color: #333; font: 200 100% 'helvetica neue'; letter-spacing: 1px; line-height: 1.4; }
+cover { display: block; width: 100%; }
+img.cover { width: 100%; }
+page { display: block; width: 100%; position: relative; }
+a { text-decoration: none; }
+/*a:hover { text-decoration: underline; }*/
+a:hover { color: #F60; }
+
+h1, h2, h3, h4, h5, h6 { font-weight: 200; }
+div.pad10 { padding: 10%; }
+h1.bottom-margin { margin-bottom: 100px; }
+h3 { margin-top: 2em; border-bottom: 1px solid #888; font-weight: 300; }
+li { list-style-type: none; line-height: 1.4em; }
+li:before { content: "•"; padding-right: 8px; color: #888; font-size: 60%; }
+
+/* NAVIGATION */
+nav { clear: both; overflow: auto; padding: 5% 10%; background: #F00; color: #FFF; }
+nav a { font-size: 200%; color: #FFF; }
+nav a:hover { color: #FFF; padding-bottom: 2px; border-bottom:1px dashed #FFF; }
+nav a.left  { float: left; }
+nav a.right { float: right; }
+
+/* PAGE 1 */
+#page1 .i1 { width: 100%; }
+#page1 .i2 { width: 100%; position: absolute; top: 0; left: 0; }
+#page1 .d1 { width: 100%; position: absolute; top: 0; left: 0; text-align: center; }
+#page1 .t1 { color: #FFF; font-size: 400%; }
+
+/* PAGE 2 */
+#page2 { overflow: hidden; }
+#page2 .d1 { width: 80%; padding: 10%; }
+#page2 .t1 { color: #FFF; font-size: 200%; }
+#page2 .i1 { width: 100%; position: absolute; top: 0; left: 0; z-index: -1; }
+
+/* PAGE 3 */
+#page3 { background-color: #F6F7ED; color: #333; }
+#page3 .d1 { padding: 10%; }
+#page3 h1 { font-size: 300%; color: #F60; }
+
+/* PAGE 4 */
+#page4 { }
+
+</style>
+</head>
+<body>
+
+<cover>
+	<img class="cover" src="cover.jpg">
+</cover>
+
+<page id="page1">	
+	<img class="i1" src="assets/images/141205_Apple_MU-1446.jpg"/>
+	<img class="i2" src="assets/images/blackshade.png"/>
+	<div class="d1">
+		<p class="t1">Intro to App Development with Swift</p>
+	</div>
+</page>
+
+<page id="page2">
+	<img class="i1" src="assets/images/Orange.jpg"/>
+	<div class="d1">
+		<p class="t1">Technology has a language. It’s called code. And we believe coding is an essential skill. Learning to code teaches you how to solve problems and work together ​in creative ways. And it helps you build apps that bring your ideas to life. We think everyone should have the opportunity to create something that can change the world. So we’ve designed a new approach to coding ​that lets anyone learn, write, and teach it.</p>
+	</div>
+</page>
+
+<page id="page3">
+	<div class="d1">
+		<h1>Welcome</h1>
+
+		<p class="t1">Swift is a powerful and intuitive programming language created by Apple for building apps. It makes programming easier, more flexible, and more fun. Swift is not only great for getting you started with coding, it's also super powerful. It's designed to scale from writing the simplest program, like "Hello, world!"; to the world's most advanced software.</p>
+
+		<p class="t2">Intro to App Development with Swift is designed to help you build a solid foundation in programming fundamentals using Swift as the language. Throughout this course, you'll get practical experience ​with the tools, techniques, and concepts needed to build a basic iOS app from scratch. You'll also learn user interface design principles, which are fundamental to programming and making great apps. </p>
+	</div>
+</page>
+
+<page id="page4">
+	<div class="pad10 d1">
+		<h1 class="bottom-margin">Using this book</h1>
+
+		<p>This book will guide you through hands-on activities, including playgrounds and app projects in Xcode. ​Follow the instructions in this book to build your programming skills and write your first iOS app.</p> 
+
+		<p>You’ll start by focusing on fundamental programming concepts, using Swift as the language. You’ll use playgrounds to experiment with code and see the ​results immediately.</p>
+
+		<p>Each lesson is designed so that you learn programming concepts as you write code. When you complete each lesson, you can check your understanding by answering review questions in the book.</p>
+
+		<p>And as you master programming skills, you can shift to doing even more app development. The book will guide you through the steps of building an app in Xcode with tips and videos throughout. Sample Xcode projects are provided so that you can experiment with certain parts of code without having to build the entire app from scratch. </p>
+
+		<p>We recommend keeping this book open as you work through the projects in Xcode. Or you can view the book on your iPad while you work in Xcode on your Mac.</p>
+
+		<h3>APP JOURNAL</h3>
+
+		<p>You may be just starting to learn how to program, but it’s not too soon to imagine the apps you might want to build. Keeping your own app journal will help you think about and keep track of the kinds of questions that developers try to answer as they build apps. The possibilities are endless.</p>
+
+		<p>Prompts and resources will help guide you through the beginning of the app design process, from thinking about the purpose of your app to market research and early user testing.</p>
+
+		<p>As you go through the course, you can use an app like Pages or Notes for your journal entries. By the end, you’ll have a basic prototype for an app you want to build.</p>
+	</div>
+</page>
+
+<page id="page4">
+	<div class="pad10 d1">
+		<h1 class="bottom-margin">Getting started</h1>
+
+		<h3>GATHER YOUR MATERIALS</h3>
+
+		<p>To complete the lessons in this guide, you’ll need ​ the following:</p>
+
+		<li>A Mac running macOS Sierra or El Capitan.</li>
+		<li>Xcode 8. Download it from the Mac App Store,​  if you need it.</li>
+		<li>Project files for the course, which you can download <a href="https://developer.apple.com/sample-code/swift/downloads/app-dev-curriculum.zip">here</a> (zip file).</li>
+
+		<p>Be sure you’ve downloaded Xcode to your Mac, then double-click the PlaygroundBasics.playground to begin your first lesson.</p>
+
+		<p>To access these materials, you might need to enter the administrator name and password for your Mac.</p>
+
+		<p>As you progress through each lesson, you’ll be directed to open the corresponding playground or Xcode project file where you can explore and learn more.</p>
+	</div>
+</page>
+
+<nav>
+	<a class="right" href="lesson01.html">Lesson 1 &raquo;</a>
+</nav>
+
+</body>
+</html>

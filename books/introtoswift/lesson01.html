@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Intro to App Development with Swift</title>
+<style>
+html, body { margin: 0; padding: 0; color: #333; font: 200 100% 'helvetica neue'; letter-spacing: 1px; line-height: 1.4; }
+page { display: block; width: 100%; position: relative; }
+a { text-decoration: none; }
+a:hover { color: #F60; }
+
+h1, h2, h3, h4, h5, h6 { font-weight: 200; }
+div.pad10 { padding: 10%; }
+h1.bottom-margin { margin-bottom: 100px; }
+h3 { margin-top: 2em; border-bottom: 1px solid #888; text-transform: uppercase; font-weight: 400; }
+h4 { font-weight: 400; text-transform: uppercase; }
+li { list-style-type: none; line-height: 1.4em; }
+li:before { content: "•"; padding-right: 8px; color: #FFF; font-size: 60%; }
+
+/* NAVIGATION */
+nav { clear: both; overflow: auto; padding: 5% 10%; background: #F00; color: #FFF; }
+nav a { font-size: 200%; color: #FFF; }
+nav a:hover { color: #FFF; padding-bottom: 2px; border-bottom:1px dashed #FFF; }
+nav a.left  { float: left; }
+nav a.right { float: right; }
+
+/* PAGE 1 */
+#page1 .d1 { width: 80%; padding: 20% 10% 5% 10%; background-color: #F6F7ED; }
+#page1 .d1 h1 { color: #F00; font-size: 400%; margin: 0; }
+#page1 .d1 h2 { color: #333; font-size: 200%; margin: 0; }
+#page1 .d2 { overflow: auto; width: 80%; padding: 5% 10% 10% 10%; color: #FFF; background-color: #F00; }
+#page1 .c1, #page1 .c2 { float: left; width: 45%; }
+#page1 .c1 { padding-right: 5%; } 
+#page1 .c2 { padding-left:  5%; } 
+
+/* PAGE 2 */
+#page2 .d1 { width: 80%; padding: 10% 10% 2% 10%; }
+#page2 .d1 h1 { border-bottom: 3px solid #F00; }
+#page2 .d2 { width: 50%; padding: 2% 10% 10% 40%; }
+#page2 .d2 h3 img { width: 40px; margin-left: 10px; }
+#page2 .d2 .i1 { width: 95%; }
+
+</style>
+</head>
+<body>
+
+<page id="page1">	
+	<div class="d1">
+		<h1>Lesson 1</h1>
+		<h2>Playground Basics</h2>
+	</div>
+	<div class="d2">
+		<div class="c1">
+			<h4>What you’ll build</h4>
+			<li>A programming setup that you can type in and get answers to basic calculations</li>
+
+			<h4>What you’ll LEARN</h4>
+			<li>How to type and change code in a playground </li>
+			<li>Where to look for the results of your work </li>
+			<li>How to add notes that will help you remember what your code means </li>
+			<li>What it looks like if something goes wrong</li>
+
+		</div>
+		<div class="c2">
+			<h4>What you’ll wonder</h4>
+			<p>What else can I do with a playground?</p>
+
+			<h4>KEY Vocabulary</h4>
+			<li>Comments</li>
+			<li>Comment out</li>
+			<li>Error</li>
+			<li>Playground</li>
+			<li>Results sidebar</li>
+		</div>
+	</div>
+</page>
+
+<page id="page2">	
+	<div class="d1">
+		<h1>Playground Basics</h1>
+	</div>
+	<div class="d2">
+		<p>In playgrounds, you can experiment with programming ideas without building an entire app. You’ll write some code, watch it run, think about it ​ a bit, change some lines, and watch it run again. Down the road, you can turn your successful experiments into a fully featured app, but for now, just play—and learn.</p>
+
+		<h3>GO BUILD <img src="assets/images/svg0.png"></h3>
+
+		<p>Open the “PlaygroundBasics.playground” file in the folder you downloaded and follow the directions.</p>
+		<img class="i1" src="assets/images/Playground Basics - playground.jpg">
+	</div>
+</page>
+
+
+<!-- NAV -->
+
+<nav>
+	<a class="left"  href="index.html">&laquo; Intro</a>
+	<a class="right" href="lesson01.html">Lesson 2 &raquo;</a>
+</nav>
+
+</body>
+</html>
