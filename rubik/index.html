@@ -1,0 +1,890 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Rubik's Cube — 3D Interactive</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bungee&family=Space+Grotesk:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg-0: #0d0805;
+    --bg-1: #1a0f0a;
+    --bg-2: #2a1a10;
+    --fg: #fef3e7;
+    --muted: #a08778;
+    --dim: #6b5848;
+    --accent: #ff6b1a;
+    --accent-2: #ffaa44;
+    --accent-3: #ff3366;
+    --green: #4ade80;
+    --card: rgba(30, 18, 12, 0.65);
+    --border: rgba(255, 170, 68, 0.18);
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { width: 100%; height: 100%; overflow: hidden; }
+  body {
+    font-family: 'Space Grotesk', sans-serif;
+    background:
+      radial-gradient(ellipse 80% 60% at 50% 0%, rgba(255, 107, 26, 0.18), transparent 60%),
+      radial-gradient(ellipse 60% 50% at 100% 100%, rgba(255, 51, 102, 0.12), transparent 50%),
+      radial-gradient(ellipse 50% 50% at 0% 80%, rgba(255, 170, 68, 0.08), transparent 50%),
+      linear-gradient(180deg, var(--bg-1) 0%, var(--bg-0) 100%);
+    color: var(--fg);
+    position: relative;
+  }
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='3'/%3E%3CfeColorMatrix values='0 0 0 0 1 0 0 0 0 0.8 0 0 0 0 0.5 0 0 0 0.15 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+    opacity: 0.4;
+    pointer-events: none;
+    mix-blend-mode: overlay;
+    z-index: 1;
+  }
+  #cube-canvas {
+    position: fixed; inset: 0;
+    width: 100%; height: 100%;
+    z-index: 2; display: block;
+  }
+  .ui-layer {
+    position: fixed; inset: 0;
+    pointer-events: none; z-index: 10;
+  }
+  .ui-layer > * { pointer-events: auto; }
+  .header {
+    position: absolute; top: 0; left: 0; right: 0;
+    padding: 24px 32px;
+    display: flex; justify-content: space-between;
+    align-items: flex-start; gap: 24px;
+  }
+  .brand { display: flex; align-items: center; gap: 14px; }
+  .brand-mark {
+    width: 44px; height: 44px;
+    background: linear-gradient(135deg,
+      #e6262e 0%, #e6262e 33%,
+      #ffd500 33%, #ffd500 66%,
+      #00a651 66%, #00a651 100%);
+    border-radius: 8px;
+    box-shadow: 0 4px 20px rgba(255, 107, 26, 0.4), inset 0 0 0 2px rgba(0,0,0,0.4);
+    transform: rotate(-8deg);
+    transition: transform 0.4s ease;
+  }
+  .brand:hover .brand-mark { transform: rotate(8deg) scale(1.05); }
+  .brand-text { display: flex; flex-direction: column; }
+  .brand-title {
+    font-family: 'Bungee', cursive;
+    font-size: 22px; line-height: 1;
+    letter-spacing: 0.02em; color: var(--fg);
+    text-shadow: 0 2px 12px rgba(255, 107, 26, 0.5);
+    animation: title-glow 4s ease-in-out infinite;
+  }
+  @keyframes title-glow {
+    0%, 100% { text-shadow: 0 2px 12px rgba(255, 107, 26, 0.4); }
+    50% { text-shadow: 0 2px 20px rgba(255, 107, 26, 0.7), 0 0 30px rgba(255, 107, 26, 0.2); }
+  }
+  .brand-sub {
+    font-size: 11px; text-transform: uppercase;
+    letter-spacing: 0.3em; color: var(--muted); margin-top: 5px;
+  }
+  .stats { display: flex; gap: 12px; }
+  .stat {
+    background: var(--card);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid var(--border);
+    padding: 10px 16px; border-radius: 12px;
+    min-width: 110px;
+  }
+  .stat-label {
+    font-size: 10px; text-transform: uppercase;
+    letter-spacing: 0.2em; color: var(--muted);
+  }
+  .stat-value {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 22px; font-weight: 600;
+    color: var(--fg); margin-top: 2px; line-height: 1;
+  }
+  .stat-value.small {
+    font-size: 13px; padding-top: 6px;
+    font-family: 'Space Grotesk', sans-serif;
+    font-weight: 600; letter-spacing: 0.1em;
+  }
+  .stat-value.accent { color: var(--accent-2); }
+  .stat-dot {
+    display: inline-block; width: 8px; height: 8px;
+    border-radius: 50%; background: var(--green);
+    box-shadow: 0 0 8px var(--green);
+    margin-right: 6px; vertical-align: middle;
+    transition: all 0.3s;
+  }
+  .stat.busy .stat-dot {
+    background: var(--accent-2);
+    box-shadow: 0 0 10px var(--accent-2);
+    animation: pulse 1s infinite;
+  }
+  @keyframes pulse {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50% { opacity: 0.5; transform: scale(0.8); }
+  }
+  .control-panel {
+    position: absolute; bottom: 32px; left: 50%;
+    transform: translateX(-50%);
+    background: var(--card);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border: 1px solid var(--border);
+    border-radius: 20px; padding: 20px 24px;
+    display: flex; align-items: center; gap: 14px;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(255, 170, 68, 0.05) inset;
+  }
+  .btn {
+    font-family: 'Space Grotesk', sans-serif;
+    font-weight: 600; font-size: 14px;
+    letter-spacing: 0.08em; text-transform: uppercase;
+    padding: 13px 22px; border-radius: 12px;
+    border: none; cursor: pointer;
+    transition: all 0.2s ease;
+    position: relative; overflow: hidden;
+    display: inline-flex; align-items: center; gap: 8px;
+    color: white;
+  }
+  .btn:disabled { opacity: 0.35; cursor: not-allowed; }
+  .btn::before {
+    content: ''; position: absolute; inset: 0;
+    background: linear-gradient(135deg, rgba(255,255,255,0.2) 0%, transparent 50%);
+    opacity: 0; transition: opacity 0.2s;
+  }
+  .btn:not(:disabled):hover::before { opacity: 1; }
+  .btn:not(:disabled):hover { transform: translateY(-2px); }
+  .btn:not(:disabled):active { transform: translateY(0); }
+  .btn-primary {
+    background: linear-gradient(135deg, var(--accent) 0%, var(--accent-3) 100%);
+    box-shadow: 0 4px 16px rgba(255, 107, 26, 0.4);
+  }
+  .btn-primary:not(:disabled):hover { box-shadow: 0 8px 28px rgba(255, 107, 26, 0.6); }
+  .btn-secondary {
+    background: linear-gradient(135deg, #16a34a 0%, #15803d 100%);
+    box-shadow: 0 4px 16px rgba(34, 197, 94, 0.3);
+  }
+  .btn-secondary:not(:disabled):hover { box-shadow: 0 8px 28px rgba(34, 197, 94, 0.5); }
+  .btn-ghost {
+    background: rgba(255, 255, 255, 0.05);
+    color: var(--fg); border: 1px solid var(--border);
+  }
+  .btn-ghost:not(:disabled):hover { background: rgba(255, 255, 255, 0.1); }
+  .divider { width: 1px; height: 36px; background: var(--border); }
+  .speed-control {
+    display: flex; flex-direction: column; gap: 6px; min-width: 110px;
+  }
+  .speed-label {
+    font-size: 10px; text-transform: uppercase;
+    letter-spacing: 0.2em; color: var(--muted);
+    display: flex; justify-content: space-between;
+  }
+  .speed-value { font-family: 'JetBrains Mono', monospace; color: var(--accent-2); }
+  .speed-slider {
+    width: 100%; -webkit-appearance: none; appearance: none;
+    height: 4px; background: rgba(255, 255, 255, 0.1);
+    border-radius: 2px; outline: none;
+  }
+  .speed-slider::-webkit-slider-thumb {
+    -webkit-appearance: none; appearance: none;
+    width: 14px; height: 14px; background: var(--accent-2);
+    border-radius: 50%; cursor: pointer;
+    box-shadow: 0 0 8px rgba(255, 170, 68, 0.5);
+  }
+  .speed-slider::-moz-range-thumb {
+    width: 14px; height: 14px; background: var(--accent-2);
+    border-radius: 50%; cursor: pointer; border: none;
+    box-shadow: 0 0 8px rgba(255, 170, 68, 0.5);
+  }
+  .manual-panel {
+    position: absolute; left: 32px; top: 50%;
+    transform: translateY(-50%);
+    background: var(--card);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border: 1px solid var(--border);
+    border-radius: 16px; padding: 16px;
+    display: flex; flex-direction: column; gap: 10px;
+  }
+  .panel-title {
+    font-size: 10px; text-transform: uppercase;
+    letter-spacing: 0.2em; color: var(--muted); text-align: center;
+  }
+  .move-grid {
+    display: grid; grid-template-columns: repeat(2, 1fr); gap: 6px;
+  }
+  .move-btn {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px; font-weight: 600;
+    padding: 8px 14px; background: rgba(255, 255, 255, 0.05);
+    color: var(--fg); border: 1px solid var(--border);
+    border-radius: 8px; cursor: pointer;
+    transition: all 0.15s ease; min-width: 48px;
+  }
+  .move-btn:hover {
+    background: rgba(255, 170, 68, 0.15);
+    border-color: var(--accent-2);
+    color: var(--accent-2);
+    transform: translateY(-1px);
+  }
+  .move-btn:active { transform: scale(0.95); }
+  .history-panel {
+    position: absolute; right: 32px; top: 50%;
+    transform: translateY(-50%);
+    background: var(--card);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border: 1px solid var(--border);
+    border-radius: 16px; padding: 16px;
+    width: 220px; max-height: 60vh;
+    display: flex; flex-direction: column;
+  }
+  .history-list {
+    display: flex; flex-wrap: wrap; gap: 4px;
+    overflow-y: auto; max-height: 50vh; padding-right: 4px;
+  }
+  .history-list::-webkit-scrollbar { width: 4px; }
+  .history-list::-webkit-scrollbar-track { background: transparent; }
+  .history-list::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+  .history-chip {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px; padding: 4px 8px;
+    background: rgba(255, 170, 68, 0.1);
+    border: 1px solid rgba(255, 170, 68, 0.2);
+    border-radius: 6px; color: var(--accent-2);
+    animation: chip-in 0.3s ease;
+  }
+  @keyframes chip-in {
+    from { transform: scale(0); opacity: 0; }
+    to { transform: scale(1); opacity: 1; }
+  }
+  .history-empty {
+    color: var(--dim); font-size: 12px;
+    text-align: center; padding: 20px 0; width: 100%;
+  }
+  .toast {
+    position: fixed; top: 100px; left: 50%;
+    transform: translateX(-50%) translateY(-20px);
+    background: var(--card);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border: 1px solid var(--border);
+    padding: 12px 22px; border-radius: 12px;
+    font-size: 13px; color: var(--fg);
+    opacity: 0; transition: all 0.3s ease;
+    pointer-events: none; z-index: 100;
+    letter-spacing: 0.05em;
+  }
+  .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+  .hint {
+    position: absolute; bottom: 130px; left: 50%;
+    transform: translateX(-50%);
+    font-size: 10px; text-transform: uppercase;
+    letter-spacing: 0.3em; color: var(--dim);
+    text-align: center; pointer-events: none; white-space: nowrap;
+  }
+  .loading {
+    position: fixed; inset: 0; background: var(--bg-0);
+    display: flex; align-items: center; justify-content: center;
+    z-index: 1000; transition: opacity 0.5s;
+  }
+  .loading.hidden { opacity: 0; pointer-events: none; }
+  .loading-text {
+    font-family: 'Bungee', cursive; font-size: 24px;
+    color: var(--accent); letter-spacing: 0.1em;
+    animation: loading-pulse 1.5s infinite;
+  }
+  @keyframes loading-pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.3; }
+  }
+  @media (max-width: 900px) {
+    .manual-panel, .history-panel { display: none; }
+    .header { padding: 16px; }
+    .brand-title { font-size: 18px; }
+    .brand-sub { font-size: 9px; }
+    .stat { padding: 8px 12px; min-width: 80px; }
+    .stat-value { font-size: 18px; }
+    .control-panel {
+      padding: 14px 16px; gap: 8px; bottom: 16px;
+      max-width: 95vw; flex-wrap: wrap; justify-content: center;
+    }
+    .btn { padding: 10px 14px; font-size: 12px; }
+    .speed-control { display: none; }
+    .divider { display: none; }
+    .hint { display: none; }
+  }
+</style>
+</head>
+<body>
+  <canvas id="cube-canvas"></canvas>
+
+  <div class="ui-layer">
+    <header class="header">
+      <div class="brand">
+        <div class="brand-mark"></div>
+        <div class="brand-text">
+          <div class="brand-title">RUBIK'S CUBE</div>
+          <div class="brand-sub">3D Interactive</div>
+        </div>
+      </div>
+      <div class="stats">
+        <div class="stat" id="status-stat">
+          <div class="stat-label">Status</div>
+          <div class="stat-value small accent" id="status-text"><span class="stat-dot"></span>READY</div>
+        </div>
+        <div class="stat">
+          <div class="stat-label">Moves</div>
+          <div class="stat-value" id="move-count">0</div>
+        </div>
+      </div>
+    </header>
+
+    <div class="manual-panel">
+      <div class="panel-title">Manual</div>
+      <div class="move-grid">
+        <button class="move-btn" data-move="U">U</button>
+        <button class="move-btn" data-move="U'">U'</button>
+        <button class="move-btn" data-move="D">D</button>
+        <button class="move-btn" data-move="D'">D'</button>
+        <button class="move-btn" data-move="L">L</button>
+        <button class="move-btn" data-move="L'">L'</button>
+        <button class="move-btn" data-move="R">R</button>
+        <button class="move-btn" data-move="R'">R'</button>
+        <button class="move-btn" data-move="F">F</button>
+        <button class="move-btn" data-move="F'">F'</button>
+        <button class="move-btn" data-move="B">B</button>
+        <button class="move-btn" data-move="B'">B'</button>
+      </div>
+    </div>
+
+    <div class="history-panel">
+      <div class="panel-title">Move History</div>
+      <div class="history-list" id="history-list">
+        <div class="history-empty">No moves yet</div>
+      </div>
+    </div>
+
+    <div class="hint">Drag to rotate · Scroll to zoom</div>
+
+    <div class="control-panel">
+      <button class="btn btn-primary" id="scramble-btn">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+          <polyline points="16 3 21 3 21 8"/>
+          <line x1="4" y1="20" x2="21" y2="3"/>
+          <polyline points="21 16 21 21 16 21"/>
+          <line x1="15" y1="15" x2="21" y2="21"/>
+          <line x1="4" y1="4" x2="9" y2="9"/>
+        </svg>
+        Scramble
+      </button>
+      <button class="btn btn-secondary" id="solve-btn">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+          <polyline points="20 6 9 17 4 12"/>
+        </svg>
+        Solve
+      </button>
+      <button class="btn btn-ghost" id="reset-btn">Reset</button>
+      <div class="divider"></div>
+      <div class="speed-control">
+        <div class="speed-label">
+          <span>Speed</span>
+          <span class="speed-value" id="speed-value">1.0×</span>
+        </div>
+        <input type="range" class="speed-slider" id="speed-slider" min="0.5" max="3" step="0.1" value="1">
+      </div>
+    </div>
+  </div>
+
+  <div class="toast" id="toast"></div>
+  <div class="loading" id="loading"><div class="loading-text">Loading...</div></div>
+
+  <script type="importmap">
+  {
+    "imports": {
+      "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
+      "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/"
+    }
+  }
+  </script>
+
+  <script type="module">
+    import * as THREE from 'three';
+    import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+    import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
+    import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.js';
+    import { EffectComposer } from 'three/addons/postprocessing/EffectComposer.js';
+    import { RenderPass } from 'three/addons/postprocessing/RenderPass.js';
+    import { UnrealBloomPass } from 'three/addons/postprocessing/UnrealBloomPass.js';
+    import { OutputPass } from 'three/addons/postprocessing/OutputPass.js';
+
+    // === 场景初始化 ===
+    const canvas = document.getElementById('cube-canvas');
+    const scene = new THREE.Scene();
+
+    const camera = new THREE.PerspectiveCamera(40, window.innerWidth/window.innerHeight, 0.1, 100);
+    camera.position.set(6.5, 5.5, 7.5);
+    camera.lookAt(0, 0, 0);
+
+    const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true });
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    renderer.toneMapping = THREE.ACESFilmicToneMapping;
+    renderer.toneMappingExposure = 1.15;
+
+    // 环境贴图，让贴纸有真实反射
+    const pmremGenerator = new THREE.PMREMGenerator(renderer);
+    scene.environment = pmremGenerator.fromScene(new RoomEnvironment(), 0.04).texture;
+
+    // === 灯光 ===
+    scene.add(new THREE.AmbientLight(0xffeedd, 0.25));
+    const keyLight = new THREE.DirectionalLight(0xffffff, 1.4);
+    keyLight.position.set(5, 8, 5);
+    scene.add(keyLight);
+    const fillLight = new THREE.DirectionalLight(0xff7733, 0.4);
+    fillLight.position.set(-5, 2, -5);
+    scene.add(fillLight);
+    const rimLight = new THREE.DirectionalLight(0xffcc88, 0.5);
+    rimLight.position.set(0, -3, -8);
+    scene.add(rimLight);
+
+    // === 背景粒子 ===
+    const particleCount = 250;
+    const particleGeom = new THREE.BufferGeometry();
+    const positions = new Float32Array(particleCount * 3);
+    for (let i = 0; i < particleCount; i++) {
+      positions[i*3]   = (Math.random() - 0.5) * 50;
+      positions[i*3+1] = (Math.random() - 0.5) * 40;
+      positions[i*3+2] = (Math.random() - 0.5) * 50 - 5;
+    }
+    particleGeom.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+    const particleMat = new THREE.PointsMaterial({
+      color: 0xff8844, size: 0.08,
+      transparent: true, opacity: 0.6,
+      blending: THREE.AdditiveBlending, depthWrite: false,
+    });
+    const particles = new THREE.Points(particleGeom, particleMat);
+    scene.add(particles);
+
+    // === 接触阴影 ===
+    const shadowCanvas = document.createElement('canvas');
+    shadowCanvas.width = 256; shadowCanvas.height = 256;
+    const sctx = shadowCanvas.getContext('2d');
+    const sgrad = sctx.createRadialGradient(128, 128, 0, 128, 128, 128);
+    sgrad.addColorStop(0, 'rgba(0, 0, 0, 0.55)');
+    sgrad.addColorStop(0.5, 'rgba(0, 0, 0, 0.25)');
+    sgrad.addColorStop(1, 'rgba(0, 0, 0, 0)');
+    sctx.fillStyle = sgrad;
+    sctx.fillRect(0, 0, 256, 256);
+    const shadowTex = new THREE.CanvasTexture(shadowCanvas);
+    const shadowPlane = new THREE.Mesh(
+      new THREE.PlaneGeometry(7, 7),
+      new THREE.MeshBasicMaterial({ map: shadowTex, transparent: true, depthWrite: false })
+    );
+    shadowPlane.rotation.x = -Math.PI / 2;
+    shadowPlane.position.y = -1.8;
+    scene.add(shadowPlane);
+
+    // === 魔方构造 ===
+    const cubeGroup = new THREE.Group();
+    scene.add(cubeGroup);
+    let cubies = [];
+
+    // 标准 WCA 配色
+    const COLORS = {
+      right:  0xe6262e, // 红
+      left:   0xff7518, // 橙
+      top:    0xf5f5f5, // 白
+      bottom: 0xffd500, // 黄
+      front:  0x00a651, // 绿
+      back:   0x0072bc, // 蓝
+    };
+
+    // 创建圆角矩形贴纸
+    function createSticker(color, face) {
+      const shape = new THREE.Shape();
+      const w = 0.42, h = 0.42, r = 0.07;
+      shape.moveTo(-w + r, -h);
+      shape.lineTo(w - r, -h);
+      shape.quadraticCurveTo(w, -h, w, -h + r);
+      shape.lineTo(w, h - r);
+      shape.quadraticCurveTo(w, h, w - r, h);
+      shape.lineTo(-w + r, h);
+      shape.quadraticCurveTo(-w, h, -w, h - r);
+      shape.lineTo(-w, -h + r);
+      shape.quadraticCurveTo(-w, -h, -w + r, -h);
+
+      const geom = new THREE.ShapeGeometry(shape, 8);
+      const mat = new THREE.MeshStandardMaterial({
+        color: color, roughness: 0.35, metalness: 0.15,
+        emissive: color, emissiveIntensity: 0.08,
+        side: THREE.DoubleSide,
+      });
+      const mesh = new THREE.Mesh(geom, mat);
+      const offset = 0.501;
+      switch(face) {
+        case 'right':  mesh.position.x =  offset; mesh.rotation.y =  Math.PI/2; break;
+        case 'left':   mesh.position.x = -offset; mesh.rotation.y = -Math.PI/2; break;
+        case 'top':    mesh.position.y =  offset; mesh.rotation.x = -Math.PI/2; break;
+        case 'bottom': mesh.position.y = -offset; mesh.rotation.x =  Math.PI/2; break;
+        case 'front':  mesh.position.z =  offset; break;
+        case 'back':   mesh.position.z = -offset; mesh.rotation.y =  Math.PI; break;
+      }
+      return mesh;
+    }
+
+    // 共享黑色本体几何与材质
+    const bodyGeom = new RoundedBoxGeometry(0.96, 0.96, 0.96, 4, 0.06);
+    const bodyMat = new THREE.MeshStandardMaterial({
+      color: 0x0a0a0a, roughness: 0.5, metalness: 0.3,
+    });
+
+    function createCubie(x, y, z) {
+      const group = new THREE.Group();
+      group.add(new THREE.Mesh(bodyGeom, bodyMat));
+      if (x ===  1) group.add(createSticker(COLORS.right,  'right'));
+      if (x === -1) group.add(createSticker(COLORS.left,   'left'));
+      if (y ===  1) group.add(createSticker(COLORS.top,    'top'));
+      if (y === -1) group.add(createSticker(COLORS.bottom, 'bottom'));
+      if (z ===  1) group.add(createSticker(COLORS.front,  'front'));
+      if (z === -1) group.add(createSticker(COLORS.back,   'back'));
+      group.position.set(x, y, z);
+      return group;
+    }
+
+    function buildCube() {
+      // 清理旧 cubie（保留共享的 bodyGeom/bodyMat）
+      while (cubeGroup.children.length > 0) {
+        const child = cubeGroup.children[0];
+        cubeGroup.remove(child);
+        child.traverse(o => {
+          if (o.isMesh) {
+            if (o.geometry && o.geometry !== bodyGeom) o.geometry.dispose();
+            if (o.material && o.material !== bodyMat) o.material.dispose();
+          }
+        });
+      }
+      cubies = [];
+      for (let x = -1; x <= 1; x++)
+        for (let y = -1; y <= 1; y++)
+          for (let z = -1; z <= 1; z++) {
+            const c = createCubie(x, y, z);
+            cubies.push(c);
+            cubeGroup.add(c);
+          }
+    }
+    buildCube();
+
+    // === 后处理 Bloom 让颜色更鲜活 ===
+    const composer = new EffectComposer(renderer);
+    composer.addPass(new RenderPass(scene, camera));
+    const bloomPass = new UnrealBloomPass(
+      new THREE.Vector2(window.innerWidth, window.innerHeight),
+      0.4, 0.5, 0.7
+    );
+    composer.addPass(bloomPass);
+    composer.addPass(new OutputPass());
+
+    // === 鼠标轨道控制 ===
+    const controls = new OrbitControls(camera, canvas);
+    controls.enableDamping = true;
+    controls.dampingFactor = 0.08;
+    controls.minDistance = 5;
+    controls.maxDistance = 15;
+    controls.enablePan = false;
+    controls.autoRotate = true;
+    controls.autoRotateSpeed = 0.6;
+
+    let autoRotateTimer;
+    function enableAutoRotateAfterDelay() {
+      clearTimeout(autoRotateTimer);
+      controls.autoRotate = false;
+      autoRotateTimer = setTimeout(() => {
+        if (!isAnimating) controls.autoRotate = true;
+      }, 4000);
+    }
+    controls.addEventListener('start', () => {
+      controls.autoRotate = false;
+      clearTimeout(autoRotateTimer);
+    });
+    controls.addEventListener('end', enableAutoRotateAfterDelay);
+
+    // === 旋转动作定义（标准魔方记号）===
+    const moveDefs = {
+      'U':  { axis: 'y', layer:  1, angle: -Math.PI/2 },
+      "U'": { axis: 'y', layer:  1, angle:  Math.PI/2 },
+      'D':  { axis: 'y', layer: -1, angle:  Math.PI/2 },
+      "D'": { axis: 'y', layer: -1, angle: -Math.PI/2 },
+      'R':  { axis: 'x', layer:  1, angle: -Math.PI/2 },
+      "R'": { axis: 'x', layer:  1, angle:  Math.PI/2 },
+      'L':  { axis: 'x', layer: -1, angle:  Math.PI/2 },
+      "L'": { axis: 'x', layer: -1, angle: -Math.PI/2 },
+      'F':  { axis: 'z', layer:  1, angle: -Math.PI/2 },
+      "F'": { axis: 'z', layer:  1, angle:  Math.PI/2 },
+      'B':  { axis: 'z', layer: -1, angle:  Math.PI/2 },
+      "B'": { axis: 'z', layer: -1, angle: -Math.PI/2 },
+    };
+
+    const moveQueue = [];
+    let isAnimating = false;
+    let moveHistory = [];
+    let animSpeed = 1.0;
+
+    const easeInOutCubic = t => t < 0.5 ? 4*t*t*t : 1 - Math.pow(-2*t+2, 3)/2;
+
+    // 执行单步旋转动画
+    function executeMove(moveName, onDone) {
+      const def = moveDefs[moveName];
+      if (!def) { onDone(); return; }
+      const { axis, layer, angle } = def;
+
+      // 选出当前层 9 个 cubie
+      const layerCubies = cubies.filter(c => Math.round(c.position[axis]) === layer);
+
+      // 创建临时 pivot 并把 cubie 挂上去（保持世界变换）
+      const pivot = new THREE.Group();
+      cubeGroup.add(pivot);
+      layerCubies.forEach(c => pivot.attach(c));
+
+      const duration = 350 / animSpeed;
+      const startTime = performance.now();
+
+      function step() {
+        const elapsed = performance.now() - startTime;
+        const t = Math.min(elapsed / duration, 1);
+        pivot.rotation[axis] = angle * easeInOutCubic(t);
+
+        if (t < 1) {
+          requestAnimationFrame(step);
+        } else {
+          // 动画结束：把 cubie 还原挂到 cubeGroup，吸附位置
+          pivot.rotation[axis] = angle;
+          pivot.updateMatrixWorld();
+          const children = [...pivot.children];
+          children.forEach(c => {
+            cubeGroup.attach(c);
+            c.position.x = Math.round(c.position.x);
+            c.position.y = Math.round(c.position.y);
+            c.position.z = Math.round(c.position.z);
+          });
+          cubeGroup.remove(pivot);
+          onDone();
+        }
+      }
+      step();
+    }
+
+    function processQueue() {
+      if (moveQueue.length === 0) {
+        isAnimating = false;
+        updateStatus('ready');
+        updateButtons();
+        enableAutoRotateAfterDelay();
+        return;
+      }
+      const wasAnimating = isAnimating;
+      isAnimating = true;
+      controls.autoRotate = false;
+      if (!wasAnimating) updateButtons();
+
+      const item = moveQueue.shift();
+      executeMove(item.move, () => {
+        if (item.recordHistory) {
+          moveHistory.push(item.move);
+          addToHistoryDisplay(item.move);
+        }
+        if (item.undoHistory) {
+          moveHistory.pop();
+          removeFromHistoryDisplay();
+        }
+        updateMoveCount();
+        processQueue();
+      });
+    }
+
+    function queueMove(move, options = {}) {
+      const { recordHistory = true, undoHistory = false } = options;
+      moveQueue.push({ move, recordHistory, undoHistory });
+      if (!isAnimating) processQueue();
+    }
+
+    function scramble() {
+      if (isAnimating) return;
+      const moves = Object.keys(moveDefs);
+      const numMoves = 25;
+      let lastFace = '';
+      updateStatus('scrambling');
+      updateButtons();
+      for (let i = 0; i < numMoves; i++) {
+        let move;
+        do {
+          move = moves[Math.floor(Math.random() * moves.length)];
+        } while (move[0] === lastFace);
+        lastFace = move[0];
+        queueMove(move);
+      }
+      showToast('Scrambling with ' + numMoves + ' random moves');
+    }
+
+    function solve() {
+      if (isAnimating) return;
+      if (moveHistory.length === 0) {
+        showToast('Cube is already solved');
+        return;
+      }
+      updateStatus('solving');
+      updateButtons();
+      const reversed = [...moveHistory].reverse();
+      // 反向遍历历史，把每一步取逆作为还原动作
+      for (const move of reversed) {
+        const inverted = move.endsWith("'") ? move.slice(0, -1) : move + "'";
+        queueMove(inverted, { recordHistory: false, undoHistory: true });
+      }
+      showToast('Solving ' + reversed.length + ' moves');
+    }
+
+    function reset() {
+      if (isAnimating) return;
+      moveQueue.length = 0;
+      moveHistory = [];
+      buildCube();
+      updateMoveCount();
+      clearHistoryDisplay();
+      updateStatus('ready');
+      updateButtons();
+      showToast('Cube reset to solved state');
+    }
+
+    // === UI 绑定 ===
+    const scrambleBtn = document.getElementById('scramble-btn');
+    const solveBtn    = document.getElementById('solve-btn');
+    const resetBtn    = document.getElementById('reset-btn');
+    const speedSlider = document.getElementById('speed-slider');
+    const speedValue  = document.getElementById('speed-value');
+    const moveCountEl = document.getElementById('move-count');
+    const statusTextEl = document.getElementById('status-text');
+    const statusStatEl = document.getElementById('status-stat');
+    const historyListEl = document.getElementById('history-list');
+    const toastEl = document.getElementById('toast');
+
+    scrambleBtn.addEventListener('click', scramble);
+    solveBtn.addEventListener('click', solve);
+    resetBtn.addEventListener('click', reset);
+    speedSlider.addEventListener('input', e => {
+      animSpeed = parseFloat(e.target.value);
+      speedValue.textContent = animSpeed.toFixed(1) + '×';
+    });
+    document.querySelectorAll('.move-btn').forEach(btn => {
+      btn.addEventListener('click', () => queueMove(btn.dataset.move));
+    });
+
+    function updateMoveCount() {
+      moveCountEl.textContent = moveHistory.length;
+    }
+    function updateStatus(status) {
+      const map = {
+        ready:      { text: 'READY',      busy: false },
+        scrambling: { text: 'SCRAMBLING', busy: true },
+        solving:    { text: 'SOLVING',    busy: true },
+      };
+      const s = map[status] || map.ready;
+      statusTextEl.innerHTML = '<span class="stat-dot"></span>' + s.text;
+      statusStatEl.classList.toggle('busy', s.busy);
+    }
+    function updateButtons() {
+      scrambleBtn.disabled = isAnimating;
+      solveBtn.disabled = isAnimating || moveHistory.length === 0;
+      resetBtn.disabled = isAnimating;
+    }
+    function addToHistoryDisplay(move) {
+      const empty = historyListEl.querySelector('.history-empty');
+      if (empty) empty.remove();
+      const chip = document.createElement('div');
+      chip.className = 'history-chip';
+      chip.textContent = move;
+      historyListEl.appendChild(chip);
+      historyListEl.scrollTop = historyListEl.scrollHeight;
+    }
+    function removeFromHistoryDisplay() {
+      const chips = historyListEl.querySelectorAll('.history-chip');
+      if (chips.length > 0) {
+        const last = chips[chips.length - 1];
+        last.style.transition = 'all 0.2s';
+        last.style.transform = 'scale(0)';
+        last.style.opacity = '0';
+        setTimeout(() => {
+          last.remove();
+          if (historyListEl.querySelectorAll('.history-chip').length === 0) {
+            const empty = document.createElement('div');
+            empty.className = 'history-empty';
+            empty.textContent = 'No moves yet';
+            historyListEl.appendChild(empty);
+          }
+        }, 200);
+      }
+    }
+    function clearHistoryDisplay() {
+      historyListEl.innerHTML = '<div class="history-empty">No moves yet</div>';
+    }
+    let toastTimer;
+    function showToast(msg) {
+      toastEl.textContent = msg;
+      toastEl.classList.add('show');
+      clearTimeout(toastTimer);
+      toastTimer = setTimeout(() => toastEl.classList.remove('show'), 2200);
+    }
+    updateButtons();
+
+    // 自适应 FOV，保证竖屏也能完整看到魔方
+    function updateCameraForAspect() {
+      const aspect = window.innerWidth / window.innerHeight;
+      if (aspect < 0.7)      camera.fov = 65;
+      else if (aspect < 1)   camera.fov = 55;
+      else if (aspect < 1.5) camera.fov = 45;
+      else                   camera.fov = 40;
+      camera.updateProjectionMatrix();
+    }
+    updateCameraForAspect();
+
+    window.addEventListener('resize', () => {
+      camera.aspect = window.innerWidth / window.innerHeight;
+      updateCameraForAspect();
+      renderer.setSize(window.innerWidth, window.innerHeight);
+      composer.setSize(window.innerWidth, window.innerHeight);
+    });
+
+    // === 渲染循环 ===
+    const clock = new THREE.Clock();
+    function animate() {
+      requestAnimationFrame(animate);
+      const elapsed = clock.getElapsedTime();
+
+      // 粒子缓慢漂浮
+      const posAttr = particleGeom.attributes.position;
+      for (let i = 0; i < particleCount; i++) {
+        posAttr.array[i*3+1] += Math.sin(elapsed * 0.5 + i * 0.3) * 0.003;
+      }
+      posAttr.needsUpdate = true;
+      particles.rotation.y = elapsed * 0.015;
+
+      // 静止时魔方轻微浮动
+      if (!isAnimating) {
+        cubeGroup.position.y = Math.sin(elapsed * 0.8) * 0.06;
+      } else {
+        cubeGroup.position.y *= 0.9;
+      }
+
+      controls.update();
+      composer.render();
+    }
+
+    setTimeout(() => document.getElementById('loading').classList.add('hidden'), 300);
+    animate();
+  </script>
+</body>
+</html>
