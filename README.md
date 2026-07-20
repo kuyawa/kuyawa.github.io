@@ -2,6 +2,6 @@
 
 ### My personal page
 
-[Take a look](httpsL//kuyawa.github.io)
+[Take a look](https://kuyawa.github.io)
 
 Stay tuned for more cool projects
