@@ -1,16 +1,725 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Kuyawa</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kuyawa — Programmer</title>
+    <style>
+        *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+        :root {
+            --bg: #020202;
+            --bg-card: rgba(24,24,27,0.3);
+            --bg-card-hover: rgba(24,24,27,0.4);
+            --border: rgba(255,255,255,0.06);
+            --border-hover: rgba(255,255,255,0.1);
+            --border-strong: rgba(255,255,255,0.12);
+            --text: #ffffff;
+            --text-300: #d4d4d8;
+            --text-400: #a1a1aa;
+            --text-500: #71717a;
+            --text-600: #52525b;
+            --text-700: #3f3f46;
+            --text-800: #27272a;
+            --green: #22c55e;
+            --green-dim: rgba(34,197,94,0.8);
+            --sans: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            --serif: Georgia, 'Times New Roman', 'Noto Serif', serif;
+            --mono: 'SF Mono', 'Cascadia Code', 'Fira Code', 'Consolas', monospace;
+        }
+        html { scroll-behavior: smooth; }
+        body {
+            font-family: var(--sans);
+            background: var(--bg);
+            color: var(--text);
+            overflow-x: hidden;
+            font-weight: 300;
+            font-size: 16px;
+            line-height: 1.625;
+            background-image:
+                linear-gradient(to right, rgba(128,128,128,0.03) 1px, transparent 1px),
+                linear-gradient(to bottom, rgba(128,128,128,0.03) 1px, transparent 1px);
+            background-size: 4rem 4rem;
+        }
+        ::selection { background: rgba(255,255,255,0.2); color: white; }
+        ::-webkit-scrollbar { width: 4px; }
+        ::-webkit-scrollbar-track { background: var(--bg); }
+        ::-webkit-scrollbar-thumb { background: var(--text-800); border-radius: 2px; }
+        ::-webkit-scrollbar-thumb:hover { background: var(--text-700); }
+        a { color: inherit; text-decoration: none; }
+        button { font-family: inherit; cursor: pointer; border: none; background: none; color: inherit; }
+
+        /* Noise overlay */
+        .noise {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            opacity: 0.04; z-index: 50; pointer-events: none;
+            background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+        }
+
+        /* Glow orb */
+        .glow-orb {
+            position: fixed; top: -400px; left: 50%; transform: translateX(-50%);
+            width: 800px; height: 800px; border-radius: 50%;
+            background: rgba(255,255,255,0.02);
+            filter: blur(64px); pointer-events: none; z-index: 0;
+        }
+
+        /* Utility */
+        .container { max-width: 1400px; margin: 0 auto; width: 100%; }
+        .px-6 { padding-left: 1.5rem; padding-right: 1.5rem; }
+        .py-32 { padding-top: 8rem; padding-bottom: 8rem; }
+
+        /* Animations */
+        @keyframes revealAnim {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .reveal { opacity: 0; animation: revealAnim 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+        .d1 { animation-delay: 0.1s; }
+        .d2 { animation-delay: 0.2s; }
+        .d3 { animation-delay: 0.3s; }
+        .d4 { animation-delay: 0.4s; }
+        .d5 { animation-delay: 0.5s; }
+        .d6 { animation-delay: 0.6s; }
+        .d7 { animation-delay: 0.7s; }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+        }
+        .float { animation: float 6s ease-in-out infinite; }
+
+        @keyframes pulse-glow {
+            0%, 100% { opacity: 0.4; }
+            50% { opacity: 1; }
+        }
+        .pulse-glow { animation: pulse-glow 2s ease-in-out infinite; }
+
+        @keyframes rotate-ring {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+/*        .rotate-ring { animation: rotate-ring 8s linear infinite; }*/
+
+        @keyframes blink-caret {
+            from, to { opacity: 0; }
+            50% { opacity: 1; }
+        }
+        .cursor-blink { animation: blink-caret 1s step-end infinite; }
+
+        @keyframes spin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+        .spin { animation: spin 1s linear infinite; }
+
+        /* Scroll reveal */
+        .sr { opacity: 0; transform: translateY(30px); transition: all 0.8s cubic-bezier(0.16, 1, 0.3, 1); }
+        .sr.visible { opacity: 1; transform: translateY(0); }
+
+        /* Gradient text */
+        .gradient-text {
+            background: linear-gradient(135deg, #ffffff 0%, #a1a1aa 100%);
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        /* Nav */
+        .nav {
+            position: fixed; top: 0; left: 0; right: 0; height: 64px; z-index: 40;
+            display: flex; align-items: center; justify-content: space-between;
+            padding: 0 1.5rem;
+            background: rgba(2,2,2,0.8);
+            backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
+            border-bottom: 1px solid var(--border);
+        }
+        .nav-status { display: flex; align-items: center; gap: 0.5rem; }
+        .nav-status .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--green); }
+        .nav-status span { font-size: 0.75rem; font-weight: 300; letter-spacing: 0.05em; color: var(--text-400); }
+        .nav-links { display: flex; align-items: center; gap: 2rem; }
+        .nav-links a {
+            font-size: 0.75rem; font-weight: 300; letter-spacing: 0.05em;
+            color: var(--text-500); transition: color 0.3s;
+        }
+        .nav-links a:hover, .nav-links a.active { color: var(--text); }
+
+        /* Hero */
+        .hero { min-height: 90vh; display: flex; flex-direction: column; justify-content: flex-end; padding-bottom: 5rem; position: relative; }
+        .hero-grid { display: grid; gap: 3rem; align-items: end; }
+        @media (min-width: 1024px) {
+            .hero-grid { grid-template-columns: 8fr 4fr; }
+        }
+        .hero-badge {
+            display: inline-flex; align-items: center; gap: 0.5rem;
+            padding: 0.375rem 0.75rem; border-radius: 9999px;
+            border: 1px solid var(--border); background: rgba(24,24,27,0.5);
+            margin-bottom: 1.5rem;
+        }
+        .hero-badge span { font-size: 10px; font-family: var(--mono); }
+        .hero-badge .c { color: var(--text-700); }
+        .hero-badge .cmd { color: var(--text-400); }
+        .hero-badge .res { color: var(--green-dim); }
+        .hero h1 { font-size: clamp(3rem, 10vw, 6rem); font-weight: 400; line-height: 0.9; letter-spacing: -0.025em; }
+        .hero h2 { font-size: clamp(1.25rem, 3vw, 1.875rem); font-weight: 300; color: var(--text-500); line-height: 1.2; margin-top: 0.5rem; }
+        .hero-dot { display: inline-block; width: 6px; height: 6px; border-radius: 50%; background: var(--text-700); vertical-align: middle; margin: 0 0.75rem; }
+        .hero-desc { margin-top: 2rem; font-size: 1rem; font-weight: 300; color: var(--text-400); max-width: 36rem; line-height: 1.625; }
+        .hero-actions { margin-top: 2.5rem; display: flex; flex-wrap: wrap; align-items: center; gap: 1rem; }
+        .btn-primary {
+            display: inline-flex; align-items: center; gap: 0.75rem;
+            padding: 0.75rem 1.5rem; background: var(--text); color: var(--bg);
+            font-size: 0.75rem; font-weight: 600; letter-spacing: 0.2em; text-transform: uppercase;
+            transition: background 0.3s;
+        }
+        .btn-primary:hover { background: #e4e4e7; }
+        .btn-primary svg, .btn-secondary svg { transition: transform 0.5s cubic-bezier(0.16, 1, 0.3, 1); }
+        .btn-primary:hover svg, .btn-secondary:hover svg { transform: translateX(4px); }
+        .btn-secondary {
+            display: inline-flex; align-items: center; gap: 0.75rem;
+            padding: 0.75rem 1.5rem; border: 1px solid rgba(255,255,255,0.08);
+            font-size: 0.75rem; font-weight: 600; letter-spacing: 0.2em; text-transform: uppercase;
+            color: var(--text-400); transition: all 0.3s;
+        }
+        .btn-secondary:hover { border-color: var(--border-strong); color: var(--text); }
+
+        /* Avatar */
+        .avatar-wrap { display: flex; justify-content: center; margin-top: 3rem; }
+        @media (min-width: 1024px) {
+            .avatar-wrap { justify-content: flex-end; margin-top: 0; }
+        }
+        .avatar-outer {
+            position: relative; width: 13rem; height: 13rem;
+        }
+        @media (min-width: 768px) {
+            .avatar-outer { width: 14rem; height: 14rem; }
+        }
+        .avatar-ring {
+            position: absolute; inset: 0; border-radius: 50%; padding: 2px;
+            background: transparent;
+        }
+        .avatar-ring-inner {
+            width: 100%; height: 100%; border-radius: 50%; background: transparent;
+            display: flex; align-items: center; justify-content: center;
+        }
+        .avatar-letter {
+            font-family: var(--serif); font-size: 3.5rem; font-weight: 400;
+            color: var(--text-400);
+        }
+        @media (min-width: 768px) { .avatar-letter { font-size: 4rem; } }
+        .avatar-dot { position: absolute; border-radius: 50%; background: var(--text-700); }
+        .avatar-dot-1 { width: 8px; height: 8px; top: -12px; right: -12px; }
+        .avatar-dot-2 { width: 6px; height: 6px; bottom: -8px; left: -16px; background: var(--text-800); }
+        .avatar-dot-3 { width: 4px; height: 4px; top: 50%; right: -24px; background: var(--text-600); }
+
+        /* Scroll indicator */
+        .scroll-ind {
+            position: absolute; bottom: 2rem; left: 50%; transform: translateX(-50%);
+            display: flex; flex-direction: column; align-items: center; gap: 0.5rem;
+        }
+        .scroll-ind span { font-size: 10px; letter-spacing: 0.2em; text-transform: uppercase; color: var(--text-700); }
+        .scroll-ind-line { width: 1px; height: 2rem; background: linear-gradient(to bottom, var(--text-700), transparent); }
+
+        /* Section */
+        .section-label { font-size: 10px; font-weight: 500; letter-spacing: 0.25em; text-transform: uppercase; color: var(--text-600); }
+        .section-title { margin-top: 1rem; font-family: var(--serif); font-size: clamp(1.875rem, 5vw, 3rem); font-weight: 400; line-height: 0.95; letter-spacing: -0.025em; }
+        .divider { height: 1px; background: var(--border); }
+        .two-col { display: grid; gap: 3rem; }
+        @media (min-width: 1024px) { .two-col { grid-template-columns: 4fr 8fr; gap: 5rem; } }
+        .body-text { font-size: 1rem; font-weight: 300; line-height: 1.625; color: var(--text-400); }
+        .body-text + .body-text { margin-top: 1.5rem; }
+
+        /* Stats grid */
+        .stats-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1px; background: var(--border); border-radius: 2px; overflow: hidden; margin-top: 3rem; }
+        @media (max-width: 767px) { .stats-grid { grid-template-columns: repeat(2, 1fr); } }
+        .stat-cell { background: var(--bg); padding: 1.5rem; text-align: center; }
+        .stat-num { font-size: 1.5rem; font-weight: 300; color: var(--text); }
+        .stat-label { margin-top: 0.25rem; font-size: 10px; letter-spacing: 0.2em; text-transform: uppercase; color: var(--text-600); }
+        .stat-note { margin-top: 0.5rem; font-size: 10px; color: var(--text-700); }
+
+        /* Skills cards */
+        .skills-grid { display: grid; gap: 1px; background: var(--border); border-radius: 2px; overflow: hidden; }
+        @media (min-width: 768px) { .skills-grid { grid-template-columns: repeat(3, 1fr); } }
+        .skill-card {
+            background: var(--bg); padding: 2.5rem; transition: all 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        .skill-card:hover { background: var(--bg-card-hover); }
+        .skill-icon {
+            width: 2.5rem; height: 2.5rem; border-radius: 50%;
+            border: 1px solid rgba(255,255,255,0.08);
+            display: flex; align-items: center; justify-content: center;
+            margin-bottom: 1.5rem;
+        }
+        .skill-icon svg { width: 20px; height: 20px; stroke: var(--text-500); fill: none; stroke-width: 1.5; }
+        .skill-card h3 { font-size: 1.125rem; font-weight: 400; color: var(--text); margin-bottom: 1rem; }
+        .tags { display: flex; flex-wrap: wrap; gap: 0.5rem; }
+        .tag {
+            padding: 0.375rem 0.75rem; font-size: 11px; font-weight: 300; color: var(--text-400);
+            border: 1px solid var(--border); border-radius: 9999px;
+            transition: all 0.3s; cursor: default;
+        }
+        .tag:hover { background: rgba(255,255,255,0.1); border-color: var(--border-strong); transform: translateY(-1px); }
+
+        /* Terminal */
+        .terminal { border: 1px solid var(--border); border-radius: 2px; overflow: hidden; background: rgba(24,24,27,0.3); max-width: 42rem; margin-top: 4rem; }
+        .terminal-bar { display: flex; align-items: center; gap: 0.5rem; padding: 0.75rem 1rem; border-bottom: 1px solid var(--border); }
+        .terminal-dot { width: 10px; height: 10px; border-radius: 50%; background: var(--text-800); }
+        .terminal-bar span { margin-left: 0.75rem; font-size: 10px; font-family: var(--mono); color: var(--text-600); }
+        .terminal-body { padding: 1.5rem; font-family: var(--mono); font-size: 0.75rem; line-height: 1.75; color: var(--text-500); }
+        .terminal-body .user { color: var(--green-dim); }
+        .terminal-body .at { color: var(--text-700); }
+        .terminal-body .host { color: var(--text-400); }
+        .terminal-body .path { color: var(--text-600); }
+        .terminal-body .dim { color: var(--text-600); }
+        .terminal-cursor { display: inline-block; width: 8px; height: 16px; background: var(--text-400); vertical-align: middle; margin-left: 2px; cursor-blink; }
+
+        /* Repo grid */
+        .repo-grid { display: grid; gap: 1px; background: var(--border); border-radius: 2px; overflow: hidden; }
+        @media (min-width: 768px) { .repo-grid { grid-template-columns: repeat(2, 1fr); } }
+        .repo-card {
+            background: var(--bg); padding: 2rem; border: 1px solid transparent;
+            cursor: pointer; transition: all 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        .repo-card:hover { background: rgba(24,24,27,0.5); border-color: var(--border-hover); }
+        .repo-card:hover .repo-name { color: var(--text); }
+        .repo-meta { display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.75rem; }
+        .repo-meta svg { width: 14px; height: 14px; stroke: var(--text-600); fill: none; stroke-width: 1.5; }
+        .repo-meta span { font-size: 10px; font-family: var(--mono); color: var(--text-600); }
+        .repo-name { font-size: 1.125rem; font-weight: 400; color: var(--text-300); transition: color 0.3s; }
+        .repo-desc { margin-top: 0.5rem; font-size: 0.875rem; font-weight: 300; color: var(--text-600); line-height: 1.625; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+        .repo-stats { margin-top: 1rem; display: flex; align-items: center; gap: 1rem; flex-wrap: wrap; }
+        .repo-lang { display: flex; align-items: center; gap: 0.375rem; font-size: 11px; color: var(--text-700); }
+        .repo-lang-dot { width: 10px; height: 10px; border-radius: 50%; }
+        .repo-stat { display: flex; align-items: center; gap: 0.25rem; font-size: 11px; color: var(--text-700); }
+        .repo-stat svg { width: 12px; height: 12px; stroke: var(--text-700); fill: none; stroke-width: 1.5; }
+        .repo-date { font-size: 10px; color: var(--text-800); margin-left: auto; }
+        .repo-loading { background: var(--bg); padding: 2rem; display: flex; align-items: center; justify-content: center; }
+        @media (min-width: 768px) { .repo-full { grid-column: 1 / -1; } }
+
+        /* Section header with link */
+        .section-head { display: flex; align-items: flex-end; justify-content: space-between; flex-wrap: wrap; gap: 1rem; margin-bottom: 4rem; }
+        .section-head-link {
+            display: inline-flex; align-items: center; gap: 0.5rem;
+            font-size: 0.75rem; font-weight: 300; letter-spacing: 0.05em;
+            color: var(--text-500); transition: color 0.3s;
+        }
+        .section-head-link:hover { color: var(--text); }
+        .section-head-link svg { width: 14px; height: 14px; stroke: currentColor; fill: none; stroke-width: 1.5; transition: transform 0.5s cubic-bezier(0.16, 1, 0.3, 1); }
+        .section-head-link:hover svg { transform: translateX(4px); }
+
+        /* Contact links */
+        .contact-list { margin-top: 3rem; }
+        .contact-link {
+            display: flex; align-items: center; justify-content: space-between;
+            padding: 1.25rem 0; border-bottom: 1px solid var(--border);
+            transition: border-color 0.5s;
+        }
+        .contact-link:hover { border-color: var(--border-strong); }
+        .contact-link-left { display: flex; align-items: center; gap: 1rem; }
+        .contact-icon {
+            width: 2.5rem; height: 2.5rem; border-radius: 50%;
+            border: 1px solid rgba(255,255,255,0.08);
+            display: flex; align-items: center; justify-content: center;
+        }
+        .contact-icon svg { width: 18px; height: 18px; stroke: var(--text-500); fill: none; stroke-width: 1.5; }
+        .contact-label { font-size: 0.875rem; font-weight: 400; color: var(--text-300); transition: color 0.3s; }
+        .contact-link:hover .contact-label { color: var(--text); }
+        .contact-sub { font-size: 0.75rem; font-weight: 300; color: var(--text-600); margin-top: 0.125rem; }
+        .contact-arrow { width: 16px; height: 16px; stroke: var(--text-700); fill: none; stroke-width: 1.5; transition: transform 0.5s cubic-bezier(0.16, 1, 0.3, 1); }
+        .contact-link:hover .contact-arrow { transform: translateX(4px); stroke: var(--text-500); }
+
+        /* Footer */
+        .footer { padding: 6rem 1.5rem; border-top: 1px solid var(--border); }
+        .footer-inner { display: flex; flex-direction: column; align-items: center; justify-content: space-between; gap: 1.5rem; }
+        @media (min-width: 768px) { .footer-inner { flex-direction: row; } }
+        .footer-left { display: flex; align-items: center; gap: 0.75rem; }
+        .footer-left .dot { width: 6px; height: 6px; border-radius: 50%; background: var(--green); }
+        .footer-left span { font-size: 0.75rem; font-weight: 300; color: var(--text-600); }
+        .footer-socials { display: flex; align-items: center; gap: 1.5rem; }
+        .footer-socials a { color: var(--text-700); transition: color 0.3s; display: flex; }
+        .footer-socials a:hover { color: var(--text); }
+        .footer-socials svg { width: 18px; height: 18px; stroke: currentColor; fill: none; stroke-width: 1.5; }
+        .footer-right { font-size: 10px; font-weight: 300; color: var(--text-800); letter-spacing: 0.05em; }
+
+        /* Responsive */
+        @media (max-width: 767px) {
+            .nav-links { gap: 1rem; }
+            .nav-links a { font-size: 0.65rem; }
+            .hero { padding-bottom: 4rem; }
+        }
+    </style>
 </head>
 <body>
-  <h1>My personal page</h1>
-  <p>This is a <a href="test/index.html">test</a></p>
-  <p>This is nice <a href="rubik/index.html">Rubik's Cube</a></p>
-  <p>Stay tuned for more cool projects</p>
+    <div class="noise"></div>
+    <div class="glow-orb"></div>
+
+    <!-- Nav -->
+    <nav class="nav">
+        <div class="nav-status reveal">
+            <div class="dot pulse-glow"></div>
+            <span>Available for work</span>
+        </div>
+        <div class="nav-links reveal d1">
+            <a href="#about">About</a>
+            <a href="#skills">Skills</a>
+            <a href="#repos">Repos</a>
+            <a href="#contact">Contact</a>
+        </div>
+    </nav>
+
+    <!-- Hero -->
+    <section class="hero px-6">
+        <div class="container">
+            <div class="hero-grid">
+                <div>
+                    <div class="reveal">
+                        <div class="hero-badge">
+                            <span class="c">$</span>
+                            <span class="cmd">whoami</span>
+                            <span class="c">→</span>
+                            <span class="res">kuyawa</span>
+                        </div>
+                    </div>
+                    <h1 class="reveal d1"><span class="gradient-text">Kuyawa</span></h1>
+                    <h2 class="reveal d2">Programmer<span class="hero-dot"></span>Builder<span class="hero-dot"></span>Problem Solver</h2>
+                    <p class="hero-desc reveal d3">I write code that works. Focused on building clean, efficient, and meaningful software — one commit at a time.</p>
+                    <div class="hero-actions reveal d4">
+                        <a href="https://github.com/kuyawa" target="_blank" rel="noopener noreferrer" class="btn-primary">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" stroke="none"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/></svg>
+                            View GitHub
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+                        </a>
+                        <a href="#contact" class="btn-secondary">
+                            Get in Touch
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+                        </a>
+                    </div>
+                </div>
+                <div class="avatar-wrap reveal d5">
+                    <div class="avatar-outer float">
+                        <div class="avatar-ring rotate-ring">
+                            <div class="avatar-ring-inner">
+                                <!-- <span class="avatar-letter">K</span> -->
+                                <img src="/media/avatar.png" width="100%">
+                            </div>
+                        </div>
+                        <div class="avatar-dot avatar-dot-1"></div>
+                        <div class="avatar-dot avatar-dot-2"></div>
+                        <div class="avatar-dot avatar-dot-3"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="scroll-ind reveal d7">
+            <span>Scroll</span>
+            <div class="scroll-ind-line"></div>
+        </div>
+    </section>
+
+    <!-- About -->
+    <section id="about" class="py-32 px-6">
+        <div class="container">
+            <div class="two-col">
+                <div class="sr">
+                    <span class="section-label">01 — About</span>
+                    <h2 class="section-title">A bit about<br>myself</h2>
+                </div>
+                <div class="sr" style="transition-delay: 0.15s;">
+                    <p class="body-text">I'm Kuyawa — a programmer who believes in the craft of writing good software. I spend my days turning ideas into running code, debugging the impossible, and continuously learning what it means to build things that matter.</p>
+                    <p class="body-text">My approach is practical: understand the problem deeply, choose the right tools, and write code that others (and future-me) can actually read and maintain. I care about simplicity, performance, and doing things the right way — even when no one is watching.</p>
+                    <p class="body-text">When I'm not coding, you'll find me exploring new technologies, contributing to open source, or diving deep into rabbit holes that start with "I wonder how this works..."</p>
+                    <div class="stats-grid">
+                        <div class="stat-cell">
+                            <div class="stat-num">∞</div>
+                            <div class="stat-label">Commits</div>
+                        </div>
+                        <div class="stat-cell">
+                            <div class="stat-num">24/7</div>
+                            <div class="stat-label">Curiosity</div>
+                        </div>
+                        <div class="stat-cell">
+                            <div class="stat-num">0</div>
+                            <div class="stat-label">Bugs Left*</div>
+                        </div>
+                        <div class="stat-cell">
+                            <div class="stat-num">∞</div>
+                            <div class="stat-label">Coffee</div>
+                        </div>
+                    </div>
+                    <p class="stat-note">*hopefully</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <div class="container px-6"><div class="divider"></div></div>
+
+    <!-- Skills -->
+    <section id="skills" class="py-32 px-6">
+        <div class="container">
+            <div class="sr" style="margin-bottom: 4rem;">
+                <span class="section-label">02 — Skills</span>
+                <h2 class="section-title">Tools & technologies</h2>
+            </div>
+            <div class="skills-grid">
+                <div class="skill-card sr">
+                    <div class="skill-icon">
+                        <svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>
+                    </div>
+                    <h3>Languages</h3>
+                    <div class="tags">
+                        <span class="tag">Python</span>
+                        <span class="tag">JavaScript</span>
+                        <span class="tag">TypeScript</span>
+                        <span class="tag">Rust</span>
+                        <span class="tag">Go</span>
+                        <span class="tag">C/C++</span>
+                        <span class="tag">Shell</span>
+                    </div>
+                </div>
+                <div class="skill-card sr" style="transition-delay: 0.1s;">
+                    <div class="skill-icon">
+                        <svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+                    </div>
+                    <h3>Frameworks</h3>
+                    <div class="tags">
+                        <span class="tag">React</span>
+                        <span class="tag">Node.js</span>
+                        <span class="tag">FastAPI</span>
+                        <span class="tag">Django</span>
+                        <span class="tag">Next.js</span>
+                        <span class="tag">Vue</span>
+                    </div>
+                </div>
+                <div class="skill-card sr" style="transition-delay: 0.2s;">
+                    <div class="skill-icon">
+                        <svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><path d="M14.7 6.3a1 1 0 000 1.4l1.6 1.6a1 1 0 001.4 0l3.77-3.77a6 6 0 01-7.94 7.94l-6.91 6.91a2.12 2.12 0 01-3-3l6.91-6.91a6 6 0 017.94-7.94l-3.76 3.76z"/></svg>
+                    </div>
+                    <h3>Tools</h3>
+                    <div class="tags">
+                        <span class="tag">Git</span>
+                        <span class="tag">Docker</span>
+                        <span class="tag">Linux</span>
+                        <span class="tag">Vim/Neovim</span>
+                        <span class="tag">PostgreSQL</span>
+                        <span class="tag">Redis</span>
+                        <span class="tag">AWS</span>
+                    </div>
+                </div>
+            </div>
+            <div class="terminal sr">
+                <div class="terminal-bar">
+                    <div class="terminal-dot"></div>
+                    <div class="terminal-dot"></div>
+                    <div class="terminal-dot"></div>
+                    <span>terminal</span>
+                </div>
+                <div class="terminal-body">
+                    <div><span class="user">kuyawa</span><span class="at">@</span><span class="host">dev</span> <span class="path">~</span> $ cat philosophy.txt</div>
+                    <div class="dim" style="margin-top: 0.5rem;">"Write code as if the next person to maintain it</div>
+                    <div class="dim">is a violent psychopath who knows where you live."</div>
+                    <div style="margin-top: 0.75rem;"><span class="user">kuyawa</span><span class="at">@</span><span class="host">dev</span> <span class="path">~</span> $ <span class="terminal-cursor"></span></div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <div class="container px-6"><div class="divider"></div></div>
+
+    <!-- Repos -->
+    <section id="repos" class="py-32 px-6">
+        <div class="container">
+            <div class="sr">
+                <div class="section-head">
+                    <div>
+                        <span class="section-label">03 — Repositories</span>
+                        <h2 class="section-title">From my GitHub</h2>
+                    </div>
+                    <a href="https://github.com/kuyawa?tab=repositories" target="_blank" rel="noopener noreferrer" class="section-head-link">
+                        View all repos
+                        <svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+                    </a>
+                </div>
+            </div>
+            <div id="repos-container" class="repo-grid">
+                <div class="repo-loading repo-full">
+                    <div style="display:flex;align-items:center;gap:0.75rem;color:var(--text-600);">
+                        <svg class="spin" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 11-6.219-8.56"/></svg>
+                        <span style="font-size:0.75rem;font-weight:300;">Loading repositories...</span>
+                    </div>
+                </div>
+            </div>
+            <div id="repos-fallback" class="repo-grid" style="display:none;">
+                <div class="repo-card" onclick="window.open('https://github.com/kuyawa','_blank')">
+                    <div class="repo-meta">
+                        <svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 016.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z"/></svg>
+                        <span>repository</span>
+                    </div>
+                    <div class="repo-name">kuyawa / projects</div>
+                    <p class="repo-desc">A collection of my projects, experiments, and explorations in software development.</p>
+                    <div class="repo-stats">
+                        <span class="repo-lang"><span class="repo-lang-dot" style="background:var(--text-500);"></span>Code</span>
+                        <span class="repo-stat"><svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>★</span>
+                    </div>
+                </div>
+                <div class="repo-card" onclick="window.open('https://github.com/kuyawa','_blank')">
+                    <div class="repo-meta">
+                        <svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 016.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z"/></svg>
+                        <span>repository</span>
+                    </div>
+                    <div class="repo-name">kuyawa / dotfiles</div>
+                    <p class="repo-desc">Personal configuration files — the foundation of my development environment.</p>
+                    <div class="repo-stats">
+                        <span class="repo-lang"><span class="repo-lang-dot" style="background:var(--text-500);"></span>Shell</span>
+                        <span class="repo-stat"><svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>★</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <div class="container px-6"><div class="divider"></div></div>
+
+    <!-- Contact -->
+    <section id="contact" class="py-32 px-6">
+        <div class="container" style="max-width: 42rem;">
+            <div class="sr">
+                <span class="section-label">04 — Contact</span>
+                <h2 class="section-title">Let's build<br>something together</h2>
+                <p class="body-text" style="margin-top: 1.5rem;">Whether you have a project in mind, want to collaborate on open source, or just want to say hi — I'm always open to good conversations.</p>
+            </div>
+            <div class="contact-list sr" style="transition-delay: 0.15s;">
+                <a href="https://github.com/kuyawa" target="_blank" rel="noopener noreferrer" class="contact-link">
+                    <div class="contact-link-left">
+                        <div class="contact-icon">
+                            <svg viewBox="0 0 24 24" fill="currentColor" stroke="none"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/></svg>
+                        </div>
+                        <div>
+                            <div class="contact-label">GitHub</div>
+                            <div class="contact-sub">github.com/kuyawa</div>
+                        </div>
+                    </div>
+                    <svg class="contact-arrow" viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+                </a>
+                <a href="mailto:kuyawa@users.noreply.github.com" class="contact-link">
+                    <div class="contact-link-left">
+                        <div class="contact-icon">
+                            <svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+                        </div>
+                        <div>
+                            <div class="contact-label">Email</div>
+                            <div class="contact-sub">Send me a message</div>
+                        </div>
+                    </div>
+                    <svg class="contact-arrow" viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+                </a>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-inner">
+                <div class="footer-left">
+                    <div class="dot pulse-glow"></div>
+                    <span>Kuyawa — Programmer</span>
+                </div>
+                <div class="footer-socials">
+                    <a href="https://github.com/kuyawa" target="_blank" rel="noopener noreferrer" aria-label="GitHub">
+                        <svg viewBox="0 0 24 24" fill="currentColor" stroke="none"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/></svg>
+                    </a>
+                </div>
+                <div class="footer-right">Built with care. No frameworks harmed.</div>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        // Scroll reveal
+        const obs = new IntersectionObserver(function(entries) {
+            entries.forEach(function(e) {
+                if (e.isIntersecting) e.target.classList.add('visible');
+            });
+        }, { threshold: 0.1, rootMargin: '0px 0px -50px 0px' });
+        document.querySelectorAll('.sr').forEach(function(el) { obs.observe(el); });
+
+        // Fetch GitHub repos
+        (function() {
+            var container = document.getElementById('repos-container');
+            var fallback = document.getElementById('repos-fallback');
+
+            fetch('https://api.github.com/users/kuyawa/repos?sort=updated&per_page=6')
+                .then(function(r) {
+                    if (!r.ok) throw new Error('API error');
+                    return r.json();
+                })
+                .then(function(repos) {
+                    if (!repos.length) throw new Error('No repos');
+
+                    var langColors = {
+                        'Python': '#3572A5', 'JavaScript': '#f1e05a', 'TypeScript': '#3178c6',
+                        'Rust': '#dea584', 'Go': '#00ADD8', 'C++': '#f34b7d', 'C': '#555555',
+                        'Shell': '#89e051', 'HTML': '#e34c26', 'CSS': '#563d7c',
+                        'Ruby': '#701516', 'Java': '#b07219', 'Swift': '#F05138',
+                        'Kotlin': '#A97BFF', 'Dart': '#00B4AB', 'PHP': '#4F5D95'
+                    };
+
+                    container.innerHTML = repos.map(function(repo, i) {
+                        var lc = langColors[repo.language] || '#71717a';
+                        var date = new Date(repo.updated_at);
+                        var dateStr = date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+                        var icon = repo.fork
+                            ? '<svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>'
+                            : '<svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 016.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z"/></svg>';
+                        var label = repo.fork ? 'fork' : 'repository';
+                        var archived = repo.archived ? '<span style="font-size:10px;font-family:var(--mono);color:var(--text-700);margin-left:0.5rem;">archived</span>' : '';
+                        var lang = repo.language
+                            ? '<span class="repo-lang"><span class="repo-lang-dot" style="background:' + lc + ';"></span>' + repo.language + '</span>'
+                            : '';
+                        var stars = repo.stargazers_count > 0
+                            ? '<span class="repo-stat"><svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>' + repo.stargazers_count + '</span>'
+                            : '';
+                        var forks = repo.forks_count > 0
+                            ? '<span class="repo-stat"><svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>' + repo.forks_count + '</span>'
+                            : '';
+
+                        return '<div class="repo-card sr" style="transition-delay:' + (i * 0.08) + 's;" onclick="window.open(\'' + repo.html_url + '\',\'_blank\')">'
+                            + '<div class="repo-meta">' + icon + '<span>' + label + '</span>' + archived + '</div>'
+                            + '<div class="repo-name">' + repo.name + '</div>'
+                            + '<p class="repo-desc">' + (repo.description || 'No description provided.') + '</p>'
+                            + '<div class="repo-stats">' + lang + stars + forks
+                            + '<span class="repo-date">' + dateStr + '</span></div></div>';
+                    }).join('');
+
+                    container.querySelectorAll('.sr').forEach(function(el) { obs.observe(el); });
+                })
+                .catch(function() {
+                    container.style.display = 'none';
+                    fallback.style.display = '';
+                    fallback.querySelectorAll('.sr').forEach(function(el) { obs.observe(el); });
+                });
+        })();
+
+        // Smooth scroll
+        document.querySelectorAll('a[href^="#"]').forEach(function(a) {
+            a.addEventListener('click', function(e) {
+                e.preventDefault();
+                var t = document.querySelector(this.getAttribute('href'));
+                if (t) t.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            });
+        });
+
+        // Active nav
+        var sections = document.querySelectorAll('section[id]');
+        var navLinks = document.querySelectorAll('.nav-links a');
+        window.addEventListener('scroll', function() {
+            var current = '';
+            sections.forEach(function(s) {
+                if (window.scrollY >= s.offsetTop - 100) current = s.id;
+            });
+            navLinks.forEach(function(l) {
+                l.classList.remove('active');
+                if (l.getAttribute('href') === '#' + current) l.classList.add('active');
+            });
+        });
+    </script>
 </body>
 </html>
-
-
