@@ -2,6 +2,6 @@
 
 ### My personal page
 
-This is a [test](test/index.html)
+[Take a look](httpsL//kuyawa.github.io)
 
 Stay tuned for more cool projects
